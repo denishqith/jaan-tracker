@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaan အတွက် နေ့စဉ် Routine Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs (v13.1.0 Module Version) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBK8iVjKRXSx0O_Bb9SLOZSQ1gV5RRgyI",
+            authDomain: "jaan-fc3ac.firebaseapp.com",
+            databaseURL: "https://jaan-fc3ac-default-rtdb.firebaseio.com",
+            projectId: "jaan-fc3ac",
+            storageBucket: "jaan-fc3ac.firebasestorage.app",
+            messagingSenderId: "470741444009",
+            appId: "1:470741444009:web:cebe1fd6ac721fbedb50b8",
+            measurementId: "G-L2VH1V3MFM"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Populate Day Selector Dropdown
+        const daySelect = document.getElementById('daySelect');
+        for (let i = 1; i <= 60; i++) {
+            const option = document.createElement('option');
+            option.value = `day_${i}`;
+            option.textContent = `ရက်သတ္တပတ် / Day ${i}`;
+            daySelect.appendChild(option);
+        }
+
+        const fieldIds = [
+            'fajr', 'dhuhr', 'asr', 'maghrib', 'isha',
+            'fajrQuran', 'wentToSchool', 'studyHome', 'drankJuice',
+            'parahRead', 'revisionRead'
+        ];
+
+        // Save Data Function
+        window.saveData = function() {
+            const selectedDay = daySelect.value;
+            const dayData = {};
+
+            fieldIds.forEach(id => {
+                const element = document.getElementById(id);
+                dayData[id] = (element.type === 'checkbox') ? element.checked : element.value;
+            });
+
+            set(ref(db, 'jaan_tracker/' + selectedDay), dayData)
+                .then(() => {
+                    document.getElementById('statusMsg').textContent = "အချက်အလက်များကို Database သို့ တိုက်ရိုက် သိမ်းဆည်းပြီးပါပြီ ✨";
+                })
+                .catch((error) => {
+                    document.getElementById('statusMsg').textContent = "သိမ်းဆည်းရာတွင် အမှားအယွင်းရှိပါသည် ⚠️";
+                });
+        }
+
+        // Load & Listen Real-time Data
+        window.loadDayData = function() {
+            const selectedDay = daySelect.value;
+            const dayRef = ref(db, 'jaan_tracker/' + selectedDay);
+
+            onValue(dayRef, (snapshot) => {
+                const data = snapshot.val() || {};
+                fieldIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element.type === 'checkbox') {
+                        element.checked = data[id] || false;
+                    } else {
+                        element.value = data[id] || '';
+                    }
+                });
+                document.getElementById('statusMsg').textContent = "အချက်အလက်များ အချိန်နဲ့တပြေးညီ ချိတ်ဆက်ထားပါသည် 🟢";
+            });
+        }
+
+        // Initial Load on Startup
+        window.onload = function() {
+            loadDayData();
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #064e3b;
+            --primary-light: #10b981;
+            --accent-gold: #d97706;
+            --bg-color: #f0fdf4;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Padauk', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); padding: 24px; border: 2px solid #ecfdf5; }
+        header { text-align: center; border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 20px; }
+        header h1 { color: var(--primary-color); font-size: 24px; margin-bottom: 6px; }
+        header p { color: var(--accent-gold); font-weight: bold; font-size: 15px; }
+
+        .day-selector-container { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .day-selector-container label { font-weight: bold; color: var(--primary-color); }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--primary-light); font-size: 16px; background-color: #f7fee7; color: var(--primary-color); font-weight: bold; cursor: pointer; }
+
+        .section-title { background-color: var(--primary-color); color: white; padding: 10px 14px; border-radius: 8px; font-size: 17px; margin: 18px 0 12px 0; }
+        .task-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+        .task-card { background-color: #f9fafb; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .task-card label { font-size: 15px; cursor: pointer; flex-grow: 1; }
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary-light); cursor: pointer; }
+
+        .input-group { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+        .input-card { background-color: #f9fafb; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+        .input-card label { font-weight: bold; color: var(--primary-color); font-size: 15px; }
+        input[type="text"] { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 15px; outline: none; }
+        
+        .status-msg { text-align: center; margin-top: 20px; font-size: 14px; color: var(--primary-light); font-weight: bold; min-height: 20px; }
+        footer { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); font-size: 13px; color: #6b7280; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>💖 Jaan အတွက် နေ့စဉ် Routine Tracker</h1>
+        <p>၂ လစာ (ရက်ပေါင်း ၆၀) Live Sync Tracker</p>
+    </header>
+
+    <div class="day-selector-container">
+        <label for="daySelect">📅 ရက်ရွေးချယ်ပါ (Day 1 မှ Day 60 အထိ):</label>
+        <select id="daySelect" onchange="loadDayData()">
+            <!-- Generated by JS -->
+        </select>
+    </div>
+
+    <!-- 1. နမားဇ် ၅ ကြိမ် -->
+    <div class="section-title">🕌 နမားဇ် ၅ ကြိမ် ဖတ်ကြားမှု</div>
+    <div class="task-group">
+        <div class="task-card"><label for="fajr">၁။ ဖဂျရ် (Fajr)</label><input type="checkbox" id="fajr" onchange="saveData()"></div>
+        <div class="task-card"><label for="dhuhr">၂။ ဇဟိုရ် (Dhuhr)</label><input type="checkbox" id="dhuhr" onchange="saveData()"></div>
+        <div class="task-card"><label for="asr">၃။ အဆွရ် (Asr)</label><input type="checkbox" id="asr" onchange="saveData()"></div>
+        <div class="task-card"><label for="maghrib">၄။ မဂ်ရိဘ် (Maghrib)</label><input type="checkbox" id="maghrib" onchange="saveData()"></div>
+        <div class="task-card"><label for="isha">၅။ အစ်ရှာ (Isha)</label><input type="checkbox" id="isha" onchange="saveData()"></div>
+    </div>
+
+    <!-- 2. ကုရ်အာန် နှင့် ကျောင်း -->
+    <div class="section-title">📖 ကုရ်အာန် နှင့် ကျောင်းစာ မှတ်တမ်း</div>
+    <div class="task-group">
+        <div class="task-card"><label for="fajrQuran">ဖဂျရ်ပြီး ကုရ်အာန် ကျက်/မကျက်</label><input type="checkbox" id="fajrQuran" onchange="saveData()"></div>
+        <div class="task-card"><label for="wentToSchool">ဒီနေ့ ကျောင်းသွားလား / မသွားဘူးလား</label><input type="checkbox" id="wentToSchool" onchange="saveData()"></div>
+        <div class="task-card"><label for="studyHome">အိမ်မှာ စာကျက်ဖြစ်လား / မကျက်ဖြစ်ဘူးလား</label><input type="checkbox" id="studyHome" onchange="saveData()"></div>
+    </div>
+
+    <div class="input-group">
+        <div class="input-card">
+            <label for="parahRead">ကျောင်းမှာ ပါရဟ် (Parah) ဘယ်လောက်ဖတ်ခဲ့လဲ။</label>
+            <input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" oninput="saveData()">
+        </div>
+        <div class="input-card">
+            <label for="revisionRead">ရှေ့စာ ဘယ်လောက်ဖတ်ခဲ့လဲ။</label>
+            <input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" oninput="saveData()">
+        </div>
+    </div>
+
+    <!-- 3. ကျန်းမာရေး -->
+    <div class="section-title">🥤 ကျန်းမာရေးနှင့် ဂရုစိုက်မှု</div>
+    <div class="task-group">
+        <div class="task-card"><label for="drankJuice">အိမ်ပြန်လာရင် ဖျော်ရည် သောက်ဖြစ်လား</label><input type="checkbox" id="drankJuice" onchange="saveData()"></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg">Database သို့ ချိတ်ဆက်နေပါသည်...</div>
+
+    <footer>
+        <p>Jaan အတွက် အချစ်များစွာဖြင့် ဖန်တီးထားသည် ❤️</p>
+    </footer>
+</div>
+
+</body>
+</html>
