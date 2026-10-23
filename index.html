@@ -38,10 +38,23 @@
             'drankJuice': 'ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫'
         };
 
-        const motivationalQuotes = [
+        // Task အလိုက် သီးသန့် ချီးမွမ်းစကားများ
+        const taskPraises = {
+            'fajr': "Alhamdulillah wa taofiqillah! ဖဂျရ် နမားဇ် ဝတ်ပြုနိုင်ခဲ့တာ အရမ်း မင်္ဂလာရှိပါတယ် Jaan ရေ 🕌✨",
+            'dhuhr': "Alhamdulillah! ဇဟိုရ် နမားဇ် ပြီးမြောက်ခဲ့ပြီ! Barakallahu Feek 💖",
+            'asr': "Alhamdulillah! အဆွရ် နမားဇ် ဝတ်ပြုပြီးပြီမို့ အလ္လာဟ်အရှင်မြတ် ကောင်းချီးပေးပါစေ 🕌✨",
+            'maghrib': "Alhamdulillah! မဂ်ရိဘ် နမားဇ် ဝတ်ပြုနိုင်ခဲ့တာ အရမ်းဝမ်းသာပါတယ် Jaan ရေ ❤️",
+            'isha': "Alhamdulillah! အစ်ရှာ နမားဇ် ဝတ်ပြုပြီး အေးချမ်းစွာ အနားယူပါနော် 🌙✨",
+            'fajrQuran': "Alhamdulillah wa taofiqillah! ကုရ်အာန် ကျက်မှတ်နိုင်ခဲ့တာ အရမ်း တော်လွန်းပါတယ် 📖💖",
+            'wentToSchool': "Jazakallahu Khair! ပညာရေးမှာ ပိုမို အောင်မြင်ပါစေနော် 🏫✨",
+            'studyHome': "Alhamdulillah! ဇွဲရှိရှိနဲ့ စာကျက်နေတာ ကြည့်ပြီး အရမ်း ဂုဏ်ယူပါတယ် စာတော်အေးလေးရေ 📚❤️",
+            'drankJuice': "Alhamdulillah! ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့တာ အရမ်း စိတ်ဓာတ်ခိုင်မာတာပဲ! ကျန်းမာရေးအတွက် အမှတ် ၁၀၀ ပါ 🥤🚫✨"
+        };
+
+        const generalPraises = [
             "Alhamdulillah wa taofiqillah! ✨",
             "Barakallahu Feek Jaan ရေ! အလ္လာဟ်အရှင်မြတ် ကောင်းချီးပေးပါစေ 💖",
-            "Alhamdulillah! ဒီနေ့အတွက် Task လေး ပြီးသွားပြီ! ဆက်လက် ကြိုးစားရအောင် 💪",
+            "Alhamdulillah! တော်လိုက်တာ Jaan ရယ်! ဆက်လက် ကြိုးစားရအောင် 💪",
             "Jazakallahu Khair! အေးချမ်းတဲ့ စိတ်နှလုံးနဲ့ သာယာတဲ့နေ့လေး ဖြစ်ပါစေ 🌧️",
             "Alhamdulillah! Jaan ရဲ့ ကြိုးစားမှုတွေကို အမြဲ ဂုဏ်ယူလျက်ပါ 🌟"
         ];
@@ -62,11 +75,13 @@
             set(ref(db, 'jaan_tracker/' + selectedDay), dayData).then(() => {
                 if (isManualSave) {
                     document.getElementById('statusMsg').textContent = `Day ${dayNum} အတွက် မှတ်တမ်းအား သိမ်းဆည်းပြီးပါပြီ ✨`;
-                    showToast(`Alhamdulillah! Day ${dayNum} အတွက် Task များ သိမ်းဆည်းပြီးပါပြီ ✨`);
+                    showToast(`Alhamdulillah! Day ${dayNum} ရဲ့ Task များအားလုံး သိမ်းဆည်းပြီးပါပြီ ✨`);
                 } else {
                     document.getElementById('statusMsg').textContent = "အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ ✨";
                     if (event && event.target && event.target.type === 'checkbox' && event.target.checked) {
-                        showToast();
+                        const taskId = event.target.id;
+                        const praiseMsg = taskPraises[taskId] || generalPraises[Math.floor(Math.random() * generalPraises.length)];
+                        showToast(praiseMsg);
                     }
                 }
                 setTimeout(() => { isLocalChange = false; }, 500);
@@ -75,17 +90,16 @@
 
         function showToast(customMessage = null) {
             const toast = document.getElementById('toast');
-            const randomQuote = customMessage || motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-            toast.textContent = randomQuote;
+            const message = customMessage || generalPraises[Math.floor(Math.random() * generalPraises.length)];
+            toast.textContent = message;
             toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
         }
 
         window.loadDayData = function() {
             const selectedDay = document.getElementById('daySelect').value;
             const dayNum = selectedDay.replace('day_', '');
             
-            // Save Button စာသား ပြောင်းလဲပေးခြင်း
             document.getElementById('saveBtnText').textContent = `Day ${dayNum} သိမ်းဆည်းမည်`;
 
             onValue(ref(db, 'jaan_tracker/' + selectedDay), (snapshot) => {
@@ -305,17 +319,15 @@
             box-shadow: 0 12px 25px rgba(5, 150, 105, 0.4);
             background: linear-gradient(135deg, #10b981 0%, #047857 100%);
         }
-        .save-btn:active {
-            transform: translateY(1px);
-        }
 
         /* Toast Notification */
         .toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: var(--primary); color: #ecfdf5; padding: 12px 24px; border-radius: 30px;
+            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--primary); color: #ecfdf5; padding: 14px 28px; border-radius: 30px;
             font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             border: 1px solid var(--accent); opacity: 0; transition: all 0.4s ease; z-index: 1000;
             text-align: center; pointer-events: none; width: max-content; max-width: 90%;
+            line-height: 1.5;
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
