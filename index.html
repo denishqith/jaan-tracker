@@ -38,7 +38,6 @@
             'drankJuice': 'ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫'
         };
 
-        // Task အလိုက် သီးသန့် ချီးမွမ်းစကားများ
         const taskPraises = {
             'fajr': "Alhamdulillah wa taofiqillah! ဖဂျရ် နမားဇ် ဝတ်ပြုနိုင်ခဲ့တာ အရမ်း မင်္ဂလာရှိပါတယ် Jaan ရေ 🕌✨",
             'dhuhr': "Alhamdulillah! ဇဟိုရ် နမားဇ် ပြီးမြောက်ခဲ့ပြီ! Barakallahu Feek 💖",
@@ -61,7 +60,7 @@
 
         let isLocalChange = false;
 
-        window.saveData = function(event, isManualSave = false) {
+        window.saveData = function(triggeredId = null, isManualSave = false) {
             const selectedDay = document.getElementById('daySelect').value;
             const dayNum = selectedDay.replace('day_', '');
             const dayData = {};
@@ -78,29 +77,38 @@
                     showToast(`Alhamdulillah! Day ${dayNum} ရဲ့ Task များအားလုံး သိမ်းဆည်းပြီးပါပြီ ✨`);
                 } else {
                     document.getElementById('statusMsg').textContent = "အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ ✨";
-                    if (event && event.target && event.target.type === 'checkbox' && event.target.checked) {
-                        const taskId = event.target.id;
-                        const praiseMsg = taskPraises[taskId] || generalPraises[Math.floor(Math.random() * generalPraises.length)];
-                        showToast(praiseMsg);
+                    if (triggeredId) {
+                        const el = document.getElementById(triggeredId);
+                        if (el && el.type === 'checkbox' && el.checked) {
+                            const praiseMsg = taskPraises[triggeredId] || generalPraises[Math.floor(Math.random() * generalPraises.length)];
+                            showToast(praiseMsg);
+                        }
                     }
                 }
                 setTimeout(() => { isLocalChange = false; }, 500);
             });
         }
 
-        function showToast(customMessage = null) {
+        function showToast(message) {
             const toast = document.getElementById('toast');
-            const message = customMessage || generalPraises[Math.floor(Math.random() * generalPraises.length)];
+            if (!toast) return;
             toast.textContent = message;
             toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+            
+            // ယခင် Timer ရှိလျှင် ရှင်းထုတ်မည်
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
         }
 
         window.loadDayData = function() {
             const selectedDay = document.getElementById('daySelect').value;
             const dayNum = selectedDay.replace('day_', '');
             
-            document.getElementById('saveBtnText').textContent = `Day ${dayNum} သိမ်းဆည်းမည်`;
+            const saveBtnText = document.getElementById('saveBtnText');
+            if (saveBtnText) saveBtnText.textContent = `Day ${dayNum} သိမ်းဆည်းမည်`;
 
             onValue(ref(db, 'jaan_tracker/' + selectedDay), (snapshot) => {
                 if (isLocalChange) return;
@@ -147,7 +155,6 @@
             }
         }
 
-        // Generate Rain effect
         function createRain() {
             const rainContainer = document.getElementById('rainContainer');
             const dropCount = 40;
@@ -172,6 +179,15 @@
                 daySelect.appendChild(opt);
             }
             daySelect.addEventListener('change', window.loadDayData);
+
+            // Checkbox နှင့် Input တိုင်းအတွက် Event Listener တိုက်ရိုက် တပ်ဆင်ခြင်း
+            fieldIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', () => window.saveData(id, false));
+                }
+            });
+
             window.loadDayData();
         });
     </script>
@@ -320,16 +336,33 @@
             background: linear-gradient(135deg, #10b981 0%, #047857 100%);
         }
 
-        /* Toast Notification */
+        /* Toast Notification - Z-index ကို ၁၀၀၀၀ အထိ မြှင့်ထားပါသည် */
         .toast {
-            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: var(--primary); color: #ecfdf5; padding: 14px 28px; border-radius: 30px;
-            font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 1px solid var(--accent); opacity: 0; transition: all 0.4s ease; z-index: 1000;
-            text-align: center; pointer-events: none; width: max-content; max-width: 90%;
+            position: fixed; 
+            bottom: 40px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(100px);
+            background: #022c22; 
+            color: #ecfdf5; 
+            padding: 16px 28px; 
+            border-radius: 30px;
+            font-size: 14px; 
+            font-weight: 600; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 2px solid #10b981; 
+            opacity: 0; 
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+            z-index: 10000;
+            text-align: center; 
+            pointer-events: none; 
+            width: max-content; 
+            max-width: 90%;
             line-height: 1.5;
         }
-        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.show { 
+            transform: translateX(-50%) translateY(0); 
+            opacity: 1; 
+        }
 
         .status-msg { text-align: center; margin-top: 16px; font-size: 13px; color: var(--accent); font-weight: 700; }
         footer { text-align: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
@@ -367,35 +400,35 @@
     <!-- 1. နမားဇ် ၅ ကြိမ် -->
     <div class="section-title">🕌 နမားဇ် ၅ ကြိမ်</div>
     <div class="task-group">
-        <div class="task-card"><label for="fajr">၁။ ဖဂျရ် (Fajr)</label><input type="checkbox" id="fajr" onchange="saveData(event)"></div>
-        <div class="task-card"><label for="dhuhr">၂။ ဇဟိုရ် (Dhuhr)</label><input type="checkbox" id="dhuhr" onchange="saveData(event)"></div>
-        <div class="task-card"><label for="asr">၃။ အဆွရ် (Asr)</label><input type="checkbox" id="asr" onchange="saveData(event)"></div>
-        <div class="task-card"><label for="maghrib">၄။ မဂ်ရိဘ် (Maghrib)</label><input type="checkbox" id="maghrib" onchange="saveData(event)"></div>
-        <div class="task-card"><label for="isha">၅။ အစ်ရှာ (Isha)</label><input type="checkbox" id="isha" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="fajr">၁။ ဖဂျရ် (Fajr)</label><input type="checkbox" id="fajr"></div>
+        <div class="task-card"><label for="dhuhr">၂။ ဇဟိုရ် (Dhuhr)</label><input type="checkbox" id="dhuhr"></div>
+        <div class="task-card"><label for="asr">၃။ အဆွရ် (Asr)</label><input type="checkbox" id="asr"></div>
+        <div class="task-card"><label for="maghrib">၄။ မဂ်ရိဘ် (Maghrib)</label><input type="checkbox" id="maghrib"></div>
+        <div class="task-card"><label for="isha">၅။ အစ်ရှာ (Isha)</label><input type="checkbox" id="isha"></div>
     </div>
 
     <!-- 2. ကုရ်အာန် နှင့် ကျောင်းစာ -->
     <div class="section-title">📖 ကုရ်အာန် နှင့် ကျောင်းစာ</div>
     <div class="task-group">
-        <div class="task-card"><label for="fajrQuran">ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း</label><input type="checkbox" id="fajrQuran" onchange="saveData(event)"></div>
-        <div class="task-card"><label for="wentToSchool">ကျောင်းသွားခြင်း</label><input type="checkbox" id="wentToSchool" onchange="saveData(event)"></div>
-        <div class="task-card"><label for="studyHome">အိမ်မှာ စာကျက်ခြင်း</label><input type="checkbox" id="studyHome" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="fajrQuran">ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း</label><input type="checkbox" id="fajrQuran"></div>
+        <div class="task-card"><label for="wentToSchool">ကျောင်းသွားခြင်း</label><input type="checkbox" id="wentToSchool"></div>
+        <div class="task-card"><label for="studyHome">အိမ်မှာ စာကျက်ခြင်း</label><input type="checkbox" id="studyHome"></div>
     </div>
 
     <div class="input-group">
-        <div class="input-card"><label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label><input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" onchange="saveData(event)"></div>
-        <div class="input-card"><label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label><input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" onchange="saveData(event)"></div>
+        <div class="input-card"><label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label><input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်"></div>
+        <div class="input-card"><label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label><input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်"></div>
     </div>
 
     <!-- 3. ကျန်းမာရေး -->
     <div class="section-title">🥤 ကျန်းမာရေး သတိပြုရန်</div>
     <div class="task-group">
-        <div class="task-card"><label for="drankJuice">ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫</label><input type="checkbox" id="drankJuice" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="drankJuice">ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫</label><input type="checkbox" id="drankJuice"></div>
     </div>
 
     <!-- 💾 သိမ်းဆည်းမည် ခလုတ် -->
     <div class="save-btn-container">
-        <button class="save-btn" onclick="saveData(event, true)">
+        <button class="save-btn" onclick="saveData(null, true)">
             <span>💾</span> <span id="saveBtnText">Day 1 သိမ်းဆည်းမည်</span>
         </button>
     </div>
