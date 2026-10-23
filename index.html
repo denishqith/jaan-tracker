@@ -40,7 +40,14 @@
 
         let isLocalChange = false;
 
-        window.saveData = function(customMessage = null, isManualSave = false) {
+        window.handleTaskChange = function(el, message) {
+            if (el.checked) {
+                showModal(message);
+            }
+            window.saveData();
+        }
+
+        window.saveData = function(isManualSave = false) {
             const selectedDay = document.getElementById('daySelect').value;
             const dayNum = selectedDay.replace('day_', '');
             const dayData = {};
@@ -54,28 +61,26 @@
             set(ref(db, 'jaan_tracker/' + selectedDay), dayData).then(() => {
                 if (isManualSave) {
                     document.getElementById('statusMsg').textContent = `Day ${dayNum} အတွက် မှတ်တမ်းအား သိမ်းဆည်းပြီးပါပြီ ✨`;
-                    showToast(`Alhamdulillah! Day ${dayNum} ရဲ့ Task များအားလုံး သိမ်းဆည်းပြီးပါပြီ ✨`);
+                    showModal(`Alhamdulillah! Day ${dayNum} ရဲ့ Task များအားလုံး သိမ်းဆည်းပြီးပါပြီ ✨`);
                 } else {
                     document.getElementById('statusMsg').textContent = "အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ ✨";
-                    if (customMessage) {
-                        showToast(customMessage);
-                    }
                 }
                 setTimeout(() => { isLocalChange = false; }, 500);
             });
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            toast.textContent = message;
-            toast.classList.add('show');
+        function showModal(message) {
+            const modal = document.getElementById('praiseModal');
+            const modalText = document.getElementById('modalText');
+            if (!modal || !modalText) return;
             
-            if (window.toastTimeout) clearTimeout(window.toastTimeout);
-            
-            window.toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 4000);
+            modalText.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        window.closeModal = function() {
+            const modal = document.getElementById('praiseModal');
+            if (modal) modal.style.display = 'none';
         }
 
         window.loadDayData = function() {
@@ -291,37 +296,41 @@
             justify-content: center;
             gap: 8px;
         }
-        .save-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(5, 150, 105, 0.4);
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-        }
 
-        .toast {
-            position: fixed; 
-            bottom: 40px; 
-            left: 50%; 
-            transform: translateX(-50%) translateY(100px);
-            background: #022c22; 
-            color: #ecfdf5; 
-            padding: 16px 28px; 
-            border-radius: 30px;
-            font-size: 14px; 
-            font-weight: 600; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            border: 2px solid #10b981; 
-            opacity: 0; 
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
-            z-index: 10000;
-            text-align: center; 
-            pointer-events: none; 
-            width: max-content; 
-            max-width: 90%;
-            line-height: 1.5;
+        /* Center Alert Modal Design */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 44, 34, 0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            padding: 20px;
         }
-        .toast.show { 
-            transform: translateX(-50%) translateY(0); 
-            opacity: 1; 
+        .modal-content {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px 20px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 2px solid #10b981;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-icon { font-size: 36px; margin-bottom: 10px; }
+        .modal-text { color: #064e3b; font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 18px; }
+        .modal-btn {
+            background: #10b981; color: white; border: none;
+            padding: 10px 24px; border-radius: 20px; font-weight: 700;
+            font-size: 14px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .status-msg { text-align: center; margin-top: 16px; font-size: 13px; color: var(--accent); font-weight: 700; }
@@ -360,35 +369,35 @@
     <!-- 1. နမားဇ် ၅ ကြိမ် -->
     <div class="section-title">🕌 နမားဇ် ၅ ကြိမ်</div>
     <div class="task-group">
-        <div class="task-card"><label for="fajr">၁။ ဖဂျရ် (Fajr)</label><input type="checkbox" id="fajr" onchange="saveData('Alhamdulillah wa taofiqillah! ဖဂျရ် နမားဇ် ဝတ်ပြုနိုင်ခဲ့တာ အရမ်း မင်္ဂလာရှိပါတယ် Jaan ရေ 🕌✨')"></div>
-        <div class="task-card"><label for="dhuhr">၂။ ဇဟိုရ် (Dhuhr)</label><input type="checkbox" id="dhuhr" onchange="saveData('Alhamdulillah! ဇဟိုရ် နမားဇ် ပြီးမြောက်ခဲ့ပြီ! Barakallahu Feek 💖')"></div>
-        <div class="task-card"><label for="asr">၃။ အဆွရ် (Asr)</label><input type="checkbox" id="asr" onchange="saveData('Alhamdulillah! အဆွရ် နမားဇ် ဝတ်ပြုပြီးပြီမို့ အလ္လာဟ်အရှင်မြတ် ကောင်းချီးပေးပါစေ 🕌✨')"></div>
-        <div class="task-card"><label for="maghrib">၄။ မဂ်ရိဘ် (Maghrib)</label><input type="checkbox" id="maghrib" onchange="saveData('Alhamdulillah! မဂ်ရိဘ် နမားဇ် ဝတ်ပြုနိုင်ခဲ့တာ အရမ်းဝမ်းသာပါတယ် Jaan ရေ ❤️')"></div>
-        <div class="task-card"><label for="isha">၅။ အစ်ရှာ (Isha)</label><input type="checkbox" id="isha" onchange="saveData('Alhamdulillah! အစ်ရှာ နမားဇ် ဝတ်ပြုပြီး အေးချမ်းစွာ အနားယူပါနော် 🌙✨')"></div>
+        <div class="task-card"><label for="fajr">၁။ ဖဂျရ် (Fajr)</label><input type="checkbox" id="fajr" onchange="handleTaskChange(this, 'Alhamdulillah wa taofiqillah! ဖဂျရ် နမားဇ် ဝတ်ပြုနိုင်ခဲ့တာ အရမ်း မင်္ဂလာရှိပါတယ် Jaan ရေ 🕌✨')"></div>
+        <div class="task-card"><label for="dhuhr">၂။ ဇဟိုရ် (Dhuhr)</label><input type="checkbox" id="dhuhr" onchange="handleTaskChange(this, 'Alhamdulillah! ဇဟိုရ် နမားဇ် ပြီးမြောက်ခဲ့ပြီ! Barakallahu Feek 💖')"></div>
+        <div class="task-card"><label for="asr">၃။ အဆွရ် (Asr)</label><input type="checkbox" id="asr" onchange="handleTaskChange(this, 'Alhamdulillah! အဆွရ် နမားဇ် ဝတ်ပြုပြီးပြီမို့ အလ္လာဟ်အရှင်မြတ် ကောင်းချီးပေးပါစေ 🕌✨')"></div>
+        <div class="task-card"><label for="maghrib">၄။ မဂ်ရိဘ် (Maghrib)</label><input type="checkbox" id="maghrib" onchange="handleTaskChange(this, 'Alhamdulillah! မဂ်ရိဘ် နမားဇ် ဝတ်ပြုနိုင်ခဲ့တာ အရမ်းဝမ်းသာပါတယ် Jaan ရေ ❤️')"></div>
+        <div class="task-card"><label for="isha">၅။ အစ်ရှာ (Isha)</label><input type="checkbox" id="isha" onchange="handleTaskChange(this, 'Alhamdulillah! အစ်ရှာ နမားဇ် ဝတ်ပြုပြီး အေးချမ်းစွာ အနားယူပါနော် 🌙✨')"></div>
     </div>
 
     <!-- 2. ကုရ်အာန် နှင့် ကျောင်းစာ -->
     <div class="section-title">📖 ကုရ်အာန် နှင့် ကျောင်းစာ</div>
     <div class="task-group">
-        <div class="task-card"><label for="fajrQuran">ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း</label><input type="checkbox" id="fajrQuran" onchange="saveData('Alhamdulillah wa taofiqillah! ကုရ်အာန် ကျက်မှတ်နိုင်ခဲ့တာ အရမ်း တော်လွန်းပါတယ် 📖💖')"></div>
-        <div class="task-card"><label for="wentToSchool">ကျောင်းသွားခြင်း</label><input type="checkbox" id="wentToSchool" onchange="saveData('Jazakallahu Khair! ကျောင်းသွားရောက်ပြီး ပညာသင်ကြားနေတာ အရမ်းတော်တယ် 🏫✨')"></div>
-        <div class="task-card"><label for="studyHome">အိမ်မှာ စာကျက်ခြင်း</label><input type="checkbox" id="studyHome" onchange="saveData('Alhamdulillah! ဇွဲရှိရှိနဲ့ စာကျက်နေတာ ကြည့်ပြီး အရမ်း ဂုဏ်ယူပါတယ် စာတော်အေးလေးရေ 📚❤️')"></div>
+        <div class="task-card"><label for="fajrQuran">ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း</label><input type="checkbox" id="fajrQuran" onchange="handleTaskChange(this, 'Alhamdulillah wa taofiqillah! ကုရ်အာန် ကျက်မှတ်နိုင်ခဲ့တာ အရမ်း တော်လွန်းပါတယ် 📖💖')"></div>
+        <div class="task-card"><label for="wentToSchool">ကျောင်းသွားခြင်း</label><input type="checkbox" id="wentToSchool" onchange="handleTaskChange(this, 'Jazakallahu Khair! ကျောင်းသွားရောက်ပြီး ပညာသင်ကြားနေတာ အရမ်းတော်တယ် 🏫✨')"></div>
+        <div class="task-card"><label for="studyHome">အိမ်မှာ စာကျက်ခြင်း</label><input type="checkbox" id="studyHome" onchange="handleTaskChange(this, 'Alhamdulillah! ဇွဲရှိရှိနဲ့ စာကျက်နေတာ ကြည့်ပြီး အရမ်း ဂုဏ်ယူပါတယ် စာတော်အေးလေးရေ 📚❤️')"></div>
     </div>
 
     <div class="input-group">
-        <div class="input-card"><label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label><input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" onchange="saveData('Alhamdulillah! ပါရဟ် မှတ်တမ်း သိမ်းဆည်းပြီးပါပြီ 📖')"></div>
-        <div class="input-card"><label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label><input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" onchange="saveData('Alhamdulillah! ရှေ့စာ မှတ်တမ်း သိမ်းဆည်းပြီးပါပြီ 📚')"></div>
+        <div class="input-card"><label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label><input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" onchange="saveData()"></div>
+        <div class="input-card"><label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label><input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" onchange="saveData()"></div>
     </div>
 
     <!-- 3. ကျန်းမာရေး -->
     <div class="section-title">🥤 ကျန်းမာရေး သတိပြုရန်</div>
     <div class="task-group">
-        <div class="task-card"><label for="drankJuice">ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫</label><input type="checkbox" id="drankJuice" onchange="saveData('Alhamdulillah! ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့တာ အရမ်း စိတ်ဓာတ်ခိုင်မာတာပဲ! ကျန်းမာရေးအတွက် အမှတ် ၁၀၀ ပါ 🥤🚫✨')"></div>
+        <div class="task-card"><label for="drankJuice">ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫</label><input type="checkbox" id="drankJuice" onchange="handleTaskChange(this, 'Alhamdulillah! ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့တာ အရမ်း စိတ်ဓာတ်ခိုင်မာတာပဲ! ကျန်းမာရေးအတွက် အမှတ် ၁၀၀ ပါ 🥤🚫✨')"></div>
     </div>
 
     <!-- 💾 သိမ်းဆည်းမည် ခလုတ် -->
     <div class="save-btn-container">
-        <button class="save-btn" onclick="saveData(null, true)">
+        <button class="save-btn" onclick="saveData(true)">
             <span>💾</span> <span id="saveBtnText">Day 1 သိမ်းဆည်းမည်</span>
         </button>
     </div>
@@ -397,8 +406,14 @@
     <footer><p>Jaan အတွက် အချစ်များစွာဖြင့် ❤️</p></footer>
 </div>
 
-<!-- Motivational Toast Notification -->
-<div class="toast" id="toast"></div>
+<!-- Center Alert Modal Popup -->
+<div class="modal-overlay" id="praiseModal">
+    <div class="modal-content">
+        <div class="modal-icon">🌟</div>
+        <div class="modal-text" id="modalText">Alhamdulillah wa taofiqillah!</div>
+        <button class="modal-btn" onclick="closeModal()">ကျေးဇူးပါ ❤️</button>
+    </div>
+</div>
 
 </body>
 </html>
