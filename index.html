@@ -42,7 +42,7 @@
 
         window.handleTaskChange = function(el, message) {
             if (el.checked) {
-                showModal(message);
+                showModal(message, "✨");
             }
             window.saveData();
         }
@@ -61,7 +61,7 @@
             set(ref(db, 'jaan_tracker/' + selectedDay), dayData).then(() => {
                 if (isManualSave) {
                     document.getElementById('statusMsg').textContent = `Day ${dayNum} အတွက် မှတ်တမ်းအား သိမ်းဆည်းပြီးပါပြီ ✨`;
-                    showModal(`Alhamdulillah! Day ${dayNum} ရဲ့ Task များအားလုံး သိမ်းဆည်းပြီးပါပြီ ✨`);
+                    showModal(`Alhamdulillah! Day ${dayNum} ကို အောင်မြင်စွာ ဖြတ်ကျော်ခဲ့ပြီးပါပြီ ✨\n\nဂုဏ်ယူပါတယ်! နောက်နေ့တွေကိုလည်း ဇွဲရှိရှိနဲ့ ဖြတ်ကျော်နိုင်ပါစေ... အာမီးန် 🤲💖`, "🤲");
                 } else {
                     document.getElementById('statusMsg').textContent = "အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ ✨";
                 }
@@ -69,12 +69,14 @@
             });
         }
 
-        function showModal(message) {
+        function showModal(message, icon = "🌟") {
             const modal = document.getElementById('praiseModal');
             const modalText = document.getElementById('modalText');
+            const modalIcon = document.getElementById('modalIcon');
             if (!modal || !modalText) return;
             
-            modalText.textContent = message;
+            modalIcon.textContent = icon;
+            modalText.innerText = message;
             modal.style.display = 'flex';
         }
 
@@ -296,8 +298,12 @@
             justify-content: center;
             gap: 8px;
         }
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(5, 150, 105, 0.4);
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        }
 
-        /* Center Alert Modal Design */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -324,8 +330,8 @@
             from { transform: scale(0.8); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
-        .modal-icon { font-size: 36px; margin-bottom: 10px; }
-        .modal-text { color: #064e3b; font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 18px; }
+        .modal-icon { font-size: 40px; margin-bottom: 10px; }
+        .modal-text { color: #064e3b; font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 18px; white-space: pre-line; }
         .modal-btn {
             background: #10b981; color: white; border: none;
             padding: 10px 24px; border-radius: 20px; font-weight: 700;
@@ -409,9 +415,9 @@
 <!-- Center Alert Modal Popup -->
 <div class="modal-overlay" id="praiseModal">
     <div class="modal-content">
-        <div class="modal-icon">🌟</div>
+        <div class="modal-icon" id="modalIcon">🌟</div>
         <div class="modal-text" id="modalText">Alhamdulillah wa taofiqillah!</div>
-        <button class="modal-btn" onclick="closeModal()">ကျေးဇူးပါ ❤️</button>
+        <button class="modal-btn" onclick="closeModal()">ကျေးဇူးပါ / အာမီးန် ❤️</button>
     </div>
 </div>
 
