@@ -44,7 +44,7 @@
             if (el.checked) {
                 showModal(message, "✨");
             }
-            window.saveData();
+            window.saveData(false);
         }
 
         window.saveData = function(isManualSave = false) {
@@ -66,6 +66,8 @@
                     document.getElementById('statusMsg').textContent = "အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ ✨";
                 }
                 setTimeout(() => { isLocalChange = false; }, 500);
+            }).catch(err => {
+                console.error("Firebase Error:", err);
             });
         }
 
@@ -161,6 +163,15 @@
                 daySelect.appendChild(opt);
             }
             daySelect.addEventListener('change', window.loadDayData);
+
+            // Manual Save Button Click Event ချိတ်ဆက်ခြင်း
+            const manualSaveBtn = document.getElementById('manualSaveBtn');
+            if (manualSaveBtn) {
+                manualSaveBtn.addEventListener('click', () => {
+                    window.saveData(true);
+                });
+            }
+
             window.loadDayData();
         });
     </script>
@@ -391,8 +402,8 @@
     </div>
 
     <div class="input-group">
-        <div class="input-card"><label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label><input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" onchange="saveData()"></div>
-        <div class="input-card"><label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label><input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" onchange="saveData()"></div>
+        <div class="input-card"><label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label><input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" onchange="saveData(false)"></div>
+        <div class="input-card"><label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label><input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" onchange="saveData(false)"></div>
     </div>
 
     <!-- 3. ကျန်းမာရေး -->
@@ -403,7 +414,7 @@
 
     <!-- 💾 သိမ်းဆည်းမည် ခလုတ် -->
     <div class="save-btn-container">
-        <button class="save-btn" onclick="saveData(true)">
+        <button class="save-btn" id="manualSaveBtn">
             <span>💾</span> <span id="saveBtnText">Day 1 သိမ်းဆည်းမည်</span>
         </button>
     </div>
