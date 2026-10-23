@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jaan အတွက် နေ့စဉ် Routine & Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+    <title>Jaan Routine - Premium Glass Tracker</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
@@ -25,114 +25,127 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const fieldIds = [
-            'fajr', 'dhuhr', 'asr', 'maghrib', 'isha',
-            'fajrQuran', 'wentToSchool', 'studyHome', 'drankJuice',
-            'parahRead', 'revisionRead'
-        ];
-
+        const fieldIds = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'fajrQuran', 'wentToSchool', 'studyHome', 'drankJuice', 'parahRead', 'revisionRead'];
         const taskLabels = {
-            'fajr': 'ဖဂျရ် (Fajr) နမားဇ်',
-            'dhuhr': 'ဇဟိုရ် (Dhuhr) နမားဇ်',
-            'asr': 'အဆွရ် (Asr) နမားဇ်',
-            'maghrib': 'မဂ်ရိဘ် (Maghrib) နမားဇ်',
-            'isha': 'အစ်ရှာ (Isha) နမားဇ်',
-            'fajrQuran': 'ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း',
-            'wentToSchool': 'ကျောင်းသွားခြင်း',
-            'studyHome': 'အိမ်မှာ စာကျက်ခြင်း',
-            'drankJuice': 'အိမ်ပြန်လာလျှင် ဖျော်ရည်သောက်ခြင်း'
+            'fajr': 'ဖဂျရ် (Fajr) နမားဇ် 🕌', 
+            'dhuhr': 'ဇဟိုရ် (Dhuhr) နမားဇ် 🕌', 
+            'asr': 'အဆွရ် (Asr) နမားဇ် 🕌',
+            'maghrib': 'မဂ်ရိဘ် (Maghrib) နမားဇ် 🕌', 
+            'isha': 'အစ်ရှာ (Isha) နမားဇ် 🕌',
+            'fajrQuran': 'ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း 📖', 
+            'wentToSchool': 'ကျောင်းသွားခြင်း 🏫',
+            'studyHome': 'အိမ်မှာ စာကျက်ခြင်း 📚', 
+            'drankJuice': 'ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫'
         };
+
+        // အစ္စလာမ့်စံနှုန်းနှင့်အညီ ပြင်ဆင်ထားသော အားပေးစကားများနှင့် Dua များ
+        const motivationalQuotes = [
+            "Alhamdulillah wa taofiqillah! ✨",
+            "Barakallahu Feek Jaan ရေ! အလ္လာဟ်အရှင်မြတ် ကောင်းချီးပေးပါစေ 💖",
+            "Alhamdulillah! ဒီနေ့အတွက် Task လေး ပြီးသွားပြီ! ဆက်လက် ကြိုးစားရအောင် 💪",
+            "Jazakallahu Khair! အေးချမ်းတဲ့ စိတ်နှလုံးနဲ့ သာယာတဲ့နေ့လေး ဖြစ်ပါစေ 🌧️",
+            "Alhamdulillah! Jaan ရဲ့ ကြိုးစားမှုတွေကို အမြဲ ဂုဏ်ယူလျက်ပါ 🌟"
+        ];
 
         let isLocalChange = false;
 
-        window.saveData = function() {
-            const daySelect = document.getElementById('daySelect');
-            if (!daySelect) return;
-            const selectedDay = daySelect.value;
+        window.saveData = function(event) {
+            const selectedDay = document.getElementById('daySelect').value;
             const dayData = {};
-
             fieldIds.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    dayData[id] = (element.type === 'checkbox') ? element.checked : element.value;
-                }
+                const el = document.getElementById(id);
+                if (el) dayData[id] = (el.type === 'checkbox') ? el.checked : el.value;
             });
-
+            
             isLocalChange = true;
-            set(ref(db, 'jaan_tracker/' + selectedDay), dayData)
-                .then(() => {
-                    document.getElementById('statusMsg').textContent = "သိမ်းဆည်းပြီးပါပြီ ✨";
-                    setTimeout(() => { isLocalChange = false; }, 500);
-                })
-                .catch(() => { isLocalChange = false; });
+            set(ref(db, 'jaan_tracker/' + selectedDay), dayData).then(() => {
+                document.getElementById('statusMsg').textContent = "အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ ✨";
+                
+                if (event && event.target && event.target.type === 'checkbox' && event.target.checked) {
+                    showToast();
+                }
+                setTimeout(() => { isLocalChange = false; }, 500);
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+            toast.textContent = randomQuote;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
         window.loadDayData = function() {
-            const daySelect = document.getElementById('daySelect');
-            if (!daySelect) return;
-            const selectedDay = daySelect.value;
-            const dayRef = ref(db, 'jaan_tracker/' + selectedDay);
-
-            onValue(dayRef, (snapshot) => {
+            const selectedDay = document.getElementById('daySelect').value;
+            onValue(ref(db, 'jaan_tracker/' + selectedDay), (snapshot) => {
                 if (isLocalChange) return;
                 const data = snapshot.val() || {};
-                
                 fieldIds.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        if (element.type === 'checkbox') {
-                            element.checked = data[id] || false;
-                        } else {
-                            if (document.activeElement !== element) {
-                                element.value = data[id] || '';
-                            }
-                        }
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = data[id] || false;
+                        else if (document.activeElement !== el) el.value = data[id] || '';
                     }
                 });
-
-                updateSummaryView(data, selectedDay);
+                updateSummary(data, selectedDay);
                 document.getElementById('statusMsg').textContent = "Live Sync ချိတ်ဆက်ထားပါသည် 🟢";
             });
         }
 
-        function updateSummaryView(data, dayKey) {
+        function updateSummary(data, dayKey) {
             const dayNum = dayKey.replace('day_', '');
-            document.getElementById('summaryTitle').textContent = `📊 Day ${dayNum} ၏ ပြီးစီးမှု အခြေအနေ`;
-
+            document.getElementById('summaryTitle').textContent = `📊 Day ${dayNum} ၏ မှတ်တမ်းအပြည့်အစုံ`;
             const checkboxes = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'fajrQuran', 'wentToSchool', 'studyHome', 'drankJuice'];
-            let completedCount = 0;
-            const completedList = document.getElementById('completedList');
-            completedList.innerHTML = '';
-
+            let count = 0;
+            const list = document.getElementById('completedList');
+            list.innerHTML = '';
+            
             checkboxes.forEach(id => {
                 if (data[id]) {
-                    completedCount++;
-                    const item = document.createElement('div');
-                    item.className = 'completed-badge';
-                    item.innerHTML = `<span>✓</span> ${taskLabels[id]}`;
-                    completedList.appendChild(item);
+                    count++;
+                    const badge = document.createElement('div');
+                    badge.className = 'completed-badge';
+                    badge.innerHTML = `<span>✓</span> ${taskLabels[id]}`;
+                    list.appendChild(badge);
                 }
             });
 
             document.getElementById('summaryParah').textContent = data['parahRead'] || 'မှတ်တမ်းမရှိပါ';
             document.getElementById('summaryRevision').textContent = data['revisionRead'] || 'မှတ်တမ်းမရှိပါ';
 
-            const percent = Math.round((completedCount / checkboxes.length) * 100);
+            const percent = Math.round((count / checkboxes.length) * 100);
             document.getElementById('progressBar').style.width = `${percent}%`;
-            document.getElementById('progressPercent').textContent = `${percent}% ပြီးစီးပါပြီ (${completedCount}/${checkboxes.length})`;
+            document.getElementById('progressPercent').textContent = `${percent}% ပြီးစီးခဲ့ပါသည် (${count}/${checkboxes.length})`;
+            
+            if (count === 0) {
+                list.innerHTML = '<p class="empty-msg">ဒီနေ့အတွက် လုပ်ဆောင်ထားသည့် Task များ မရှိသေးပါ</p>';
+            }
+        }
 
-            if (completedCount === 0) {
-                completedList.innerHTML = '<p class="empty-msg">လုပ်ဆောင်ထားသည့် Task များ မရှိသေးပါ</p>';
+        // Generate Rain effect
+        function createRain() {
+            const rainContainer = document.getElementById('rainContainer');
+            const dropCount = 40;
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'drop';
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDuration = `${0.8 + Math.random() * 0.5}s`;
+                drop.style.animationDelay = `${Math.random() * 2}s`;
+                drop.style.opacity = Math.random() * 0.5 + 0.2;
+                rainContainer.appendChild(drop);
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            createRain();
             const daySelect = document.getElementById('daySelect');
             for (let i = 1; i <= 60; i++) {
-                const option = document.createElement('option');
-                option.value = `day_${i}`;
-                option.textContent = `Day ${i}`;
-                daySelect.appendChild(option);
+                const opt = document.createElement('option');
+                opt.value = `day_${i}`;
+                opt.textContent = `📅 Day ${i} မှတ်တမ်း`;
+                daySelect.appendChild(opt);
             }
             daySelect.addEventListener('change', window.loadDayData);
             window.loadDayData();
@@ -140,110 +153,201 @@
     </script>
 
     <style>
-        :root { --primary: #064e3b; --light: #10b981; --gold: #d97706; --bg: #f0fdf4; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Padauk', sans-serif; }
-        body { background-color: var(--bg); color: #1f2937; padding: 16px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 800px; background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); padding: 20px; border: 1px solid #d1fae5; }
-        header { text-align: center; border-bottom: 2px solid #ecfdf5; padding-bottom: 12px; margin-bottom: 16px; }
-        header h1 { color: var(--primary); font-size: 22px; }
-        header p { color: var(--gold); font-weight: bold; font-size: 14px; }
+        :root {
+            --primary: #022c22;
+            --accent: #10b981;
+            --gold: #f59e0b;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text-dark: #064e3b;
+        }
 
-        .day-selector-container { margin-bottom: 16px; }
-        .day-selector-container label { font-weight: bold; color: var(--primary); display: block; margin-bottom: 6px; }
-        select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--light); font-size: 16px; background-color: #f7fee7; color: var(--primary); font-weight: bold; outline: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans Myanmar', sans-serif; }
 
-        .summary-card { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border: 2px solid #a7f3d0; border-radius: 14px; padding: 16px; margin-bottom: 20px; }
-        .summary-card h2 { color: var(--primary); font-size: 16px; margin-bottom: 10px; }
-        .progress-bar-bg { background-color: #e5e7eb; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 6px; }
-        .progress-bar-fill { background-color: var(--light); height: 100%; width: 0%; transition: width 0.4s; }
-        .progress-text { font-size: 12px; font-weight: bold; color: var(--primary); text-align: right; }
-        .completed-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-        .completed-badge { background-color: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; border-radius: 15px; padding: 4px 10px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; }
-        .empty-msg { font-size: 12px; color: #9ca3af; font-style: italic; }
-        .summary-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; border-top: 1px dashed #a7f3d0; padding-top: 10px; font-size: 12px; }
-        .note-box { background: white; padding: 8px 10px; border-radius: 6px; border: 1px solid #e5e7eb; }
-        .note-box strong { color: var(--primary); display: block; }
+        body {
+            background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+            color: #ecfdf5;
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-        .section-title { background-color: var(--primary); color: white; padding: 8px 12px; border-radius: 8px; font-size: 15px; margin: 16px 0 10px 0; font-weight: bold; }
-        .task-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-        .task-card { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
-        .task-card label { font-size: 14px; cursor: pointer; flex-grow: 1; }
-        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--light); cursor: pointer; }
+        /* Rain Animation */
+        .rain {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+        .drop {
+            position: absolute;
+            top: -20px;
+            width: 1px;
+            height: 25px;
+            background: linear-gradient(transparent, rgba(255, 255, 255, 0.4));
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            to { transform: translateY(105vh); }
+        }
 
-        .input-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-        .input-card { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
-        .input-card label { font-weight: bold; color: var(--primary); font-size: 13px; }
-        input[type="text"] { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 14px; outline: none; }
-        
-        .status-msg { text-align: center; margin-top: 16px; font-size: 13px; color: var(--light); font-weight: bold; min-height: 18px; }
-        footer { text-align: center; margin-top: 20px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
+        /* Container Glassmorphism */
+        .container {
+            width: 100%;
+            max-width: 750px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            color: #1f2937;
+            position: relative;
+            z-index: 2;
+        }
+
+        header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid rgba(6, 78, 59, 0.1); padding-bottom: 14px; }
+        header h1 { color: var(--primary); font-size: 22px; font-weight: 700; }
+        header p { color: var(--gold); font-size: 13px; font-weight: 600; margin-top: 2px; }
+
+        .day-selector-container label { font-weight: 700; color: var(--primary); font-size: 14px; display: block; margin-bottom: 6px; }
+        select {
+            width: 100%; padding: 12px 16px; border-radius: 12px;
+            border: 1.5px solid var(--accent); font-size: 15px;
+            background: #f0fdf4; color: var(--primary); font-weight: 700;
+            outline: none; margin-bottom: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        /* Summary Dashboard Glass */
+        .summary-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 78, 59, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 18px; padding: 18px; margin-bottom: 24px;
+        }
+        .summary-card h2 { color: var(--primary); font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+        .progress-bar-bg { background: rgba(0, 0, 0, 0.08); height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 6px; }
+        .progress-bar-fill { background: linear-gradient(90deg, #10b981, #059669); height: 100%; width: 0%; transition: width 0.5s ease; }
+        .progress-text { font-size: 12px; font-weight: 700; color: var(--primary); text-align: right; }
+        .completed-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .completed-badge {
+            background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;
+            border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .empty-msg { font-size: 13px; color: #9ca3af; font-style: italic; }
+
+        .summary-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; border-top: 1px dashed rgba(16, 185, 129, 0.3); padding-top: 12px; }
+        .note-box { background: rgba(255, 255, 255, 0.7); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(0, 0, 0, 0.05); }
+        .note-box strong { color: var(--primary); display: block; font-size: 12px; }
+        .note-box span { font-size: 13px; font-weight: 600; color: #374151; }
+
+        /* Task Cards */
+        .section-title {
+            background: var(--primary); color: #ecfdf5; padding: 8px 14px;
+            border-radius: 10px; font-size: 14px; margin: 20px 0 12px 0; font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .task-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+        .task-card {
+            background: rgba(249, 250, 251, 0.8); border: 1px solid #e5e7eb;
+            border-radius: 12px; padding: 12px 16px; display: flex;
+            align-items: center; justify-content: space-between; transition: all 0.2s;
+        }
+        .task-card:hover { border-color: var(--accent); background: #ffffff; }
+        .task-card label { font-size: 14px; cursor: pointer; flex-grow: 1; font-weight: 500; color: #1f2937; }
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
+
+        .input-group { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+        .input-card { background: rgba(249, 250, 251, 0.8); border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; }
+        .input-card label { font-weight: 700; color: var(--primary); font-size: 13px; display: block; margin-bottom: 4px; }
+        input[type="text"] {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db;
+            font-size: 14px; outline: none; background: #ffffff;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--primary); color: #ecfdf5; padding: 12px 24px; border-radius: 30px;
+            font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid var(--accent); opacity: 0; transition: all 0.4s ease; z-index: 1000;
+            text-align: center; pointer-events: none; width: max-content; max-width: 90%;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .status-msg { text-align: center; margin-top: 20px; font-size: 13px; color: var(--accent); font-weight: 700; }
+        footer { text-align: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
     </style>
 </head>
 <body>
 
+<div class="rain" id="rainContainer"></div>
+
 <div class="container">
     <header>
         <h1>💖 Jaan အတွက် နေ့စဉ် Routine Tracker</h1>
-        <p>Live Sync & Summary Dashboard</p>
+        <p>အေးချမ်းသာယာသော မိုးစက်လေးများနှင့် နေ့စဉ်မှတ်တမ်း</p>
     </header>
 
     <div class="day-selector-container">
-        <label for="daySelect">📅 ရက်ရွေးချယ်ရန်:</label>
+        <label for="daySelect">📅 ရက်စွဲနှင့် မှတ်တမ်း ရွေးချယ်ရန်:</label>
         <select id="daySelect"></select>
     </div>
 
-    <!-- 📊 Dashboard Summary (ကိုယ့်ဘက်ကနေ လှမ်းကြည့်ရမည့်နေရာ) -->
+    <!-- 📊 Summary Dashboard -->
     <div class="summary-card">
-        <h2 id="summaryTitle">📊 Day 1 ၏ ပြီးစီးမှု အခြေအနေ</h2>
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressBar"></div>
-        </div>
-        <div class="progress-text" id="progressPercent">0% ပြီးစီးပါပြီ</div>
+        <h2 id="summaryTitle">📊 Day 1 ၏ မှတ်တမ်းအပြည့်အစုံ</h2>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+        <div class="progress-text" id="progressPercent">0% ပြီးစီးခဲ့ပါသည်</div>
+        
         <div class="completed-list" id="completedList"></div>
+
         <div class="summary-notes">
-            <div class="note-box"><strong>📖 ပါရဟ်</strong><span id="summaryParah">မှတ်တမ်းမရှိပါ</span></div>
-            <div class="note-box"><strong>📚 ရှေ့စာ</strong><span id="summaryRevision">မှတ်တမ်းမရှိပါ</span></div>
+            <div class="note-box"><strong>📖 ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</strong><span id="summaryParah">မှတ်တမ်းမရှိပါ</span></div>
+            <div class="note-box"><strong>📚 ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</strong><span id="summaryRevision">မှတ်တမ်းမရှိပါ</span></div>
         </div>
     </div>
 
     <!-- 1. နမားဇ် ၅ ကြိမ် -->
     <div class="section-title">🕌 နမားဇ် ၅ ကြိမ်</div>
     <div class="task-group">
-        <div class="task-card"><label for="fajr">၁။ ဖဂျရ် (Fajr)</label><input type="checkbox" id="fajr" onchange="saveData()"></div>
-        <div class="task-card"><label for="dhuhr">၂။ ဇဟိုရ် (Dhuhr)</label><input type="checkbox" id="dhuhr" onchange="saveData()"></div>
-        <div class="task-card"><label for="asr">၃။ အဆွရ် (Asr)</label><input type="checkbox" id="asr" onchange="saveData()"></div>
-        <div class="task-card"><label for="maghrib">၄။ မဂ်ရိဘ် (Maghrib)</label><input type="checkbox" id="maghrib" onchange="saveData()"></div>
-        <div class="task-card"><label for="isha">၅။ အစ်ရှာ (Isha)</label><input type="checkbox" id="isha" onchange="saveData()"></div>
+        <div class="task-card"><label for="fajr">၁။ ဖဂျရ် (Fajr)</label><input type="checkbox" id="fajr" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="dhuhr">၂။ ဇဟိုရ် (Dhuhr)</label><input type="checkbox" id="dhuhr" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="asr">၃။ အဆွရ် (Asr)</label><input type="checkbox" id="asr" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="maghrib">၄။ မဂ်ရိဘ် (Maghrib)</label><input type="checkbox" id="maghrib" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="isha">၅။ အစ်ရှာ (Isha)</label><input type="checkbox" id="isha" onchange="saveData(event)"></div>
     </div>
 
-    <!-- 2. ကုရ်အာန် နှင့် ကျောင်း -->
+    <!-- 2. ကုရ်အာန် နှင့် ကျောင်းစာ -->
     <div class="section-title">📖 ကုရ်အာန် နှင့် ကျောင်းစာ</div>
     <div class="task-group">
-        <div class="task-card"><label for="fajrQuran">ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း</label><input type="checkbox" id="fajrQuran" onchange="saveData()"></div>
-        <div class="task-card"><label for="wentToSchool">ကျောင်းသွားခြင်း</label><input type="checkbox" id="wentToSchool" onchange="saveData()"></div>
-        <div class="task-card"><label for="studyHome">အိမ်မှာ စာကျက်ခြင်း</label><input type="checkbox" id="studyHome" onchange="saveData()"></div>
+        <div class="task-card"><label for="fajrQuran">ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း</label><input type="checkbox" id="fajrQuran" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="wentToSchool">ကျောင်းသွားခြင်း</label><input type="checkbox" id="wentToSchool" onchange="saveData(event)"></div>
+        <div class="task-card"><label for="studyHome">အိမ်မှာ စာကျက်ခြင်း</label><input type="checkbox" id="studyHome" onchange="saveData(event)"></div>
     </div>
 
     <div class="input-group">
-        <div class="input-card">
-            <label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label>
-            <input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" onchange="saveData()">
-        </div>
-        <div class="input-card">
-            <label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label>
-            <input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" onchange="saveData()">
-        </div>
+        <div class="input-card"><label for="parahRead">ကျောင်းမှာ ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</label><input type="text" id="parahRead" placeholder="ဥပမာ - ၁ ပါရဟ်" onchange="saveData(event)"></div>
+        <div class="input-card"><label for="revisionRead">ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</label><input type="text" id="revisionRead" placeholder="ဥပမာ - စူရာဟ် ယာစီးန်" onchange="saveData(event)"></div>
     </div>
 
     <!-- 3. ကျန်းမာရေး -->
-    <div class="section-title">🥤 ကျန်းမာရေး</div>
+    <div class="section-title">🥤 ကျန်းမာရေး သတိပြုရန်</div>
     <div class="task-group">
-        <div class="task-card"><label for="drankJuice">ဖျော်ရည် သောက်ဖြစ်ခြင်း</label><input type="checkbox" id="drankJuice" onchange="saveData()"></div>
+        <div class="task-card"><label for="drankJuice">ဖျော်ရည် မသောက်ဘဲ စိတ်ရှည်နိုင်ခဲ့ခြင်း 🥤🚫</label><input type="checkbox" id="drankJuice" onchange="saveData(event)"></div>
     </div>
 
     <div class="status-msg" id="statusMsg">ချိတ်ဆက်နေပါသည်...</div>
     <footer><p>Jaan အတွက် အချစ်များစွာဖြင့် ❤️</p></footer>
 </div>
+
+<!-- Motivational Toast Notification -->
+<div class="toast" id="toast"></div>
 
 </body>
 </html>
