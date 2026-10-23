@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaan Routine - Live Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBK8iVjKRXSx0O_Bb9SLOZSQ1gV5RRgyI",
+            authDomain: "jaan-fc3ac.firebaseapp.com",
+            databaseURL: "https://jaan-fc3ac-default-rtdb.firebaseio.com",
+            projectId: "jaan-fc3ac",
+            storageBucket: "jaan-fc3ac.firebasestorage.app",
+            messagingSenderId: "470741444009",
+            appId: "1:470741444009:web:cebe1fd6ac721fbedb50b8",
+            measurementId: "G-L2VH1V3MFM"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const taskLabels = {
+            'fajr': 'ဖဂျရ် (Fajr) နမားဇ်',
+            'dhuhr': 'ဇဟိုရ် (Dhuhr) နမားဇ်',
+            'asr': 'အဆွရ် (Asr) နမားဇ်',
+            'maghrib': 'မဂ်ရိဘ် (Maghrib) နမားဇ်',
+            'isha': 'အစ်ရှာ (Isha) နမားဇ်',
+            'fajrQuran': 'ဖဂျရ်ပြီး ကုရ်အာန် ကျက်ခြင်း',
+            'wentToSchool': 'ကျောင်းသွားခြင်း',
+            'studyHome': 'အိမ်မှာ စာကျက်ခြင်း',
+            'drankJuice': 'အိမ်ပြန်လာလျှင် ဖျော်ရည်သောက်ခြင်း'
+        };
+
+        window.loadDayData = function() {
+            const daySelect = document.getElementById('daySelect');
+            const selectedDay = daySelect.value;
+            const dayRef = ref(db, 'jaan_tracker/' + selectedDay);
+
+            onValue(dayRef, (snapshot) => {
+                const data = snapshot.val() || {};
+                updateDashboard(data, selectedDay);
+            });
+        }
+
+        function updateDashboard(data, dayKey) {
+            const dayNum = dayKey.replace('day_', '');
+            document.getElementById('displayDayTitle').textContent = `Day ${dayNum} ၏ မှတ်တမ်းအခြေအနေ`;
+
+            const checkboxes = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'fajrQuran', 'wentToSchool', 'studyHome', 'drankJuice'];
+            let completedCount = 0;
+
+            const grid = document.getElementById('taskGrid');
+            grid.innerHTML = '';
+
+            checkboxes.forEach(id => {
+                const isDone = data[id] || false;
+                if(isDone) completedCount++;
+
+                const card = document.createElement('div');
+                card.className = `status-card ${isDone ? 'done' : 'pending'}`;
+                card.innerHTML = `
+                    <span>${taskLabels[id]}</span>
+                    <span class="badge">${isDone ? '✓ ပြီးပါပြီ' : '✗ မလုပ်ရသေး'}</span>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Text Info
+            document.getElementById('parahValue').textContent = data['parahRead'] || 'မှတ်တမ်းမရှိပါ';
+            document.getElementById('revisionValue').textContent = data['revisionRead'] || 'မှတ်တမ်းမရှိပါ';
+
+            // Progress Bar
+            const percent = Math.round((completedCount / checkboxes.length) * 100);
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressText').textContent = `${percent}% ပြီးစီးပါပြီ (${completedCount}/${checkboxes.length})`;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const daySelect = document.getElementById('daySelect');
+            for (let i = 1; i <= 60; i++) {
+                const option = document.createElement('option');
+                option.value = `day_${i}`;
+                option.textContent = `Day ${i} မှတ်တမ်းကြည့်ရန်`;
+                daySelect.appendChild(option);
+            }
+            daySelect.addEventListener('change', window.loadDayData);
+            window.loadDayData();
+        });
+    </script>
+
+    <style>
+        :root { --primary: #064e3b; --light: #10b981; --bg: #f0fdf4; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Padauk', sans-serif; }
+        body { background-color: var(--bg); color: #1f2937; padding: 16px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 700px; background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 20px; border: 1px solid #d1fae5; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #ecfdf5; padding-bottom: 12px; }
+        header h1 { color: var(--primary); font-size: 22px; }
+        header p { color: #d97706; font-weight: bold; font-size: 14px; }
+        
+        select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--light); font-size: 16px; background-color: #f7fee7; color: var(--primary); font-weight: bold; margin-bottom: 20px; outline: none; }
+        
+        .progress-box { background: #ecfdf5; padding: 16px; border-radius: 14px; border: 1px solid #a7f3d0; margin-bottom: 20px; text-align: center; }
+        .progress-bg { background: #e5e7eb; height: 14px; border-radius: 7px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { background: var(--light); height: 100%; width: 0%; transition: width 0.4s; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .status-card { padding: 12px 16px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; border: 1px solid #e5e7eb; }
+        .status-card.done { background-color: #d1fae5; border-color: #6ee7b7; color: #065f46; font-weight: bold; }
+        .status-card.pending { background-color: #f9fafb; color: #9ca3af; }
+        .badge { font-size: 12px; padding: 4px 8px; border-radius: 6px; }
+        .done .badge { background: #10b981; color: white; }
+        .pending .badge { background: #e5e7eb; color: #6b7280; }
+
+        .text-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .info-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; }
+        .info-card strong { color: var(--primary); font-size: 13px; display: block; }
+        .info-card span { font-size: 14px; color: #334155; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>👀 Jaan ၏ Daily Routine Dashboard</h1>
+        <p>အချိန်နဲ့တပြေးညီ ကြည့်ရှုနိုင်သည့် စာမျက်နှာ</p>
+    </header>
+
+    <select id="daySelect"></select>
+
+    <div class="progress-box">
+        <h2 id="displayDayTitle" style="color: var(--primary); font-size: 18px;">Day 1 ၏ မှတ်တမ်းအခြေအနေ</h2>
+        <div class="progress-bg"><div class="progress-fill" id="progressBar"></div></div>
+        <div id="progressText" style="font-size: 13px; font-weight: bold; color: var(--primary);">0% ပြီးစီးပါပြီ</div>
+    </div>
+
+    <div class="grid" id="taskGrid"></div>
+
+    <div class="text-info">
+        <div class="info-card">
+            <strong>📖 ဖတ်ခဲ့သည့် ပါရဟ် (Parah)</strong>
+            <span id="parahValue">မှတ်တမ်းမရှိပါ</span>
+        </div>
+        <div class="info-card">
+            <strong>📚 ဖတ်ခဲ့သည့် ရှေ့စာ (Revision)</strong>
+            <span id="revisionValue">မှတ်တမ်းမရှိပါ</span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
